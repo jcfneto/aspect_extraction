@@ -6,8 +6,8 @@ import pandas as pd
 from datasets import Dataset, concatenate_datasets
 
 
-def pre_processing_tv_dataset(path: str) -> Dataset:
-    """Pre-processing TV base data. Generating token-compatible 
+def pre_processing_tv_dataset(path: str) -> Dataset or pd.DataFrame:
+    """Pre-processing TV base data. Generating token-compatible
     sequences with aspects.
 
     Args:
@@ -36,7 +36,8 @@ def pre_processing_tv_dataset(path: str) -> Dataset:
         data['tokens'].append(tokens)
         data['aspect_tags'].append(labels)
 
-    return Dataset.from_dict(data)
+    return pd.DataFrame(data)
+    # return Dataset.from_dict(data)
 
 
 def extract_tokens_and_aspects(path: str) -> pd.DataFrame:
@@ -63,18 +64,19 @@ def extract_tokens_and_aspects(path: str) -> pd.DataFrame:
                 curr_aspects.append(aspect['index'])
             tokens_aspects.append((curr_tokens, curr_aspects))
     return pd.DataFrame(
-        tokens_aspects, 
+        tokens_aspects,
         columns=['tokens', 'aspect_tags'])
 
 
-def _pre_processing_reli_dataset(path: str) -> Dataset:
+# def _pre_processing_reli_dataset(path: str) -> Dataset:
+def _pre_processing_reli_dataset(path: str):
     """Pre-processing of the books dataset.
 
     Args:
         path: Path of json file.
 
     Returns:
-        Dataset com os dados prontos 
+        Dataset com os dados prontos
     """
     # Extraindo os tokens e aspectos do arquivo json.
     data = extract_tokens_and_aspects(path)
@@ -90,14 +92,19 @@ def _pre_processing_reli_dataset(path: str) -> Dataset:
                     curr_aspect_tags[aspect_idx[i]] = tag
         aspect_tags.append(curr_aspect_tags)
     data['aspect_tags'] = aspect_tags
-    return Dataset.from_pandas(data)
+    return data
+    # return Dataset.from_pandas(data)
 
 
-def pre_processing_reli_dataset(path: list):
+def split_author(string: str):
+    return string.split('/')[-1].split('.')[0].split('_')[0]
+
+
+def pre_processing_reli_dataset(path: str):
     """Pré-processamento do dataset livros.
 
     Args:
-        directory: Caminho dos arquivos json.
+        path: Caminho dos arquivos json.
 
     Returns:
         Dataset with pre-processed data.
@@ -107,7 +114,10 @@ def pre_processing_reli_dataset(path: list):
 
     # pre-processing
     data = _pre_processing_reli_dataset(paths[0])
+    data['author'] = split_author(paths[0])
     for path in paths[1:]:
         curr_dataset = _pre_processing_reli_dataset(path)
-        data = concatenate_datasets([data, curr_dataset])
+        curr_dataset['author'] = split_author(path)
+        data = pd.concat([data, curr_dataset]).reset_index(drop=True)
+        # data = concatenate_datasets([data, curr_dataset])
     return data
