@@ -1,9 +1,9 @@
 import os
-import aspect_utils
 
 import pandas as pd
 
-from datasets import Dataset, concatenate_datasets
+from datasets import Dataset
+from src import utils
 
 
 def pre_processing_tv_dataset(path: str) -> Dataset or pd.DataFrame:
@@ -18,14 +18,14 @@ def pre_processing_tv_dataset(path: str) -> Dataset or pd.DataFrame:
     """
 
     # reading the data
-    df = aspect_utils.json_to_dataframe(path)
+    df = utils.json_to_dataframe(path)
 
     # pre-processing the data
     data = {'tokens': [], 'aspect_tags': []}
     for idx, row in df.iterrows():
 
         # separating the tokens
-        tokens = aspect_utils.split(row.tokens)
+        tokens = utils.split(row.tokens)
 
         # tagging the aspects in sequences (list)
         labels = [0] * len(tokens)
@@ -50,7 +50,7 @@ def extract_tokens_and_aspects(path: str) -> pd.DataFrame:
         Dataframe with tokens and aspects.
     """
     # Lendo o arquivo.
-    data = aspect_utils.json_to_dataframe(path)
+    data = utils.json_to_dataframe(path)
 
     # Extracting tokens and aspects.
     tokens_aspects = []
@@ -93,7 +93,6 @@ def _pre_processing_reli_dataset(path: str):
         aspect_tags.append(curr_aspect_tags)
     data['aspect_tags'] = aspect_tags
     return data
-    # return Dataset.from_pandas(data)
 
 
 def split_author(string: str):
@@ -119,5 +118,4 @@ def pre_processing_reli_dataset(path: str):
         curr_dataset = _pre_processing_reli_dataset(path)
         curr_dataset['author'] = split_author(path)
         data = pd.concat([data, curr_dataset]).reset_index(drop=True)
-        # data = concatenate_datasets([data, curr_dataset])
     return data
