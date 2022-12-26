@@ -44,8 +44,8 @@ def build_tokenizer(model_checkpoint: str):
     Args:
         model_checkpoint: Nome do modelo.
 
-     Returns:
-         Tokenizador carregado.
+    Returns:
+        Tokenizador carregado.
     """
     return AutoTokenizer.from_pretrained(model_checkpoint)
 

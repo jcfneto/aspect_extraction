@@ -37,7 +37,6 @@ def pre_processing_tv_dataset(path: str) -> Dataset or pd.DataFrame:
         data['aspect_tags'].append(labels)
 
     return pd.DataFrame(data)
-    # return Dataset.from_dict(data)
 
 
 def extract_tokens_and_aspects(path: str) -> pd.DataFrame:
@@ -49,6 +48,7 @@ def extract_tokens_and_aspects(path: str) -> pd.DataFrame:
     Returns:
         Dataframe with tokens and aspects.
     """
+
     # Lendo o arquivo.
     data = utils.json_to_dataframe(path)
 
@@ -68,8 +68,7 @@ def extract_tokens_and_aspects(path: str) -> pd.DataFrame:
         columns=['tokens', 'aspect_tags'])
 
 
-# def _pre_processing_reli_dataset(path: str) -> Dataset:
-def _pre_processing_reli_dataset(path: str):
+def _pre_processing_reli_dataset(path: str) -> pd.DataFrame:
     """Pre-processing of the books dataset.
 
     Args:
@@ -78,6 +77,7 @@ def _pre_processing_reli_dataset(path: str):
     Returns:
         Dataset com os dados prontos
     """
+
     # Extraindo os tokens e aspectos do arquivo json.
     data = extract_tokens_and_aspects(path)
 
@@ -95,7 +95,7 @@ def _pre_processing_reli_dataset(path: str):
     return data
 
 
-def split_author(string: str):
+def split_author(string: str) -> str:
     return string.split('/')[-1].split('.')[0].split('_')[0]
 
 
@@ -108,6 +108,7 @@ def pre_processing_reli_dataset(path: str):
     Returns:
         Dataset with pre-processed data.
     """
+
     # listing the files.
     paths = [os.path.join(path, name) for name in os.listdir(path)]
 
