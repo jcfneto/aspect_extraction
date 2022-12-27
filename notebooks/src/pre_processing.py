@@ -59,7 +59,7 @@ def extract_tokens_and_aspects(path: str) -> pd.DataFrame:
             curr_tokens = []
             curr_aspects = []
             for word in sentences['words']:
-                curr_tokens.append(word['token'])
+                curr_tokens.append(word['plain'])
             for aspect in sentences['aspects']:
                 curr_aspects.append(aspect['index'])
             tokens_aspects.append((curr_tokens, curr_aspects))
