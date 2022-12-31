@@ -39,51 +39,52 @@ def pre_processing_tv_dataset(path: str) -> Dataset or pd.DataFrame:
     return pd.DataFrame(data)
 
 
-def extract_tokens_and_aspects(path: str) -> pd.DataFrame:
+def extract_tokens_and_aspects(data: pd.DataFrame) -> pd.DataFrame:
     """Extracts tokens and aspects from the dataset.
 
     Args:
-        path: Path of json file.
+        data: Dataframe with reviews.
 
     Returns:
         Dataframe with tokens and aspects.
     """
 
-    # Lendo o arquivo.
-    data = utils.json_to_dataframe(path)
-
     # Extracting tokens and aspects.
+    review = 0
     tokens_aspects = []
-    for phrases in data['phrases']:
-        for sentences in phrases:
+    for _, row in data.iterrows():
+        review += 1
+        for sentences in row['phrases']:
             curr_tokens = []
             curr_aspects = []
             for word in sentences['words']:
                 curr_tokens.append(word['plain'])
             for aspect in sentences['aspects']:
                 curr_aspects.append(aspect['index'])
-            tokens_aspects.append((curr_tokens, curr_aspects))
+            tokens_aspects.append((
+                curr_tokens, curr_aspects, review, row['author']
+            ))
     return pd.DataFrame(
         tokens_aspects,
-        columns=['tokens', 'aspect_tags'])
+        columns=['tokens', 'aspect_tags', 'review', 'author'])
 
 
-def _pre_processing_reli_dataset(path: str) -> pd.DataFrame:
+def _pre_processing_reli_dataset(data: pd.DataFrame) -> pd.DataFrame:
     """Pre-processing of the books dataset.
 
     Args:
-        path: Path of json file.
+        data: Dataframe with reviews.
 
     Returns:
-        Dataset com os dados prontos
+        Dataframe with tokens, aspects and reviews.
     """
 
     # Extraindo os tokens e aspectos do arquivo json.
-    data = extract_tokens_and_aspects(path)
+    data = extract_tokens_and_aspects(data)
 
     # Pré-processando os dados.
     aspect_tags = []
-    for idx, row in data.iterrows():
+    for _, row in data.iterrows():
         curr_aspect_tags = [0] * len(row['tokens'])
         if len(row['aspect_tags']) > 0:
             for aspect_idx in row['aspect_tags']:
@@ -112,11 +113,15 @@ def pre_processing_reli_dataset(path: str):
     # listing the files.
     paths = [os.path.join(path, name) for name in os.listdir(path)]
 
-    # pre-processing
-    data = _pre_processing_reli_dataset(paths[0])
+    # reading the files
+    data = utils.json_to_dataframe(paths[0])
     data['author'] = split_author(paths[0])
     for path in paths[1:]:
-        curr_dataset = _pre_processing_reli_dataset(path)
-        curr_dataset['author'] = split_author(path)
-        data = pd.concat([data, curr_dataset]).reset_index(drop=True)
+        curr_data = utils.json_to_dataframe(path)
+        curr_data['author'] = split_author(path)
+        data = pd.concat([data, curr_data])
+
+    # pre-processing
+    data = _pre_processing_reli_dataset(data).reset_index(drop=True)
+    data['sentence'] = data.index + 1
     return data

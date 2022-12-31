@@ -1,4 +1,4 @@
-tokens,aspect_tags,num_aspects,has_aspect,fold
+tokens,aspect_tags,total_aspects,has_aspect,fold
 "['Excelente', 'smart', 'tv', '.', 'E', 'foi', 'entregue', 'vem', 'antes', 'do', 'prazo', 'informado', '.']","[0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]",1,1,1
 "['Imagem', 'ótima', 'recursos', 'de', 'web', 'bons', ',', 'recomendo', 'não', 'vai', 'se', 'arrepender']","[1, 0, 1, 2, 2, 0, 0, 0, 0, 0, 0, 0]",2,1,1
 "['produto', 'ótimo', ',', 'entrega', 'antes', 'do', 'prazo', 'previsto', ',', 'parabéns', 'a', 'parceria', '.', 'continuo', 'comprando', '.', 'após', 'falhar', 'paro', '!', 'e', 'compreu', 'uma', 'para', 'minha', 'filha', '.']","[1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]",2,1,1

@@ -5,7 +5,7 @@ import pandas as pd
 
 from datasets import Dataset, DatasetDict
 
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedGroupKFold
 
 from transformers import (AutoTokenizer,
                           DataCollatorForTokenClassification,
@@ -83,16 +83,16 @@ def train_test_val_split(
         test_size: float,
         val_size: float) -> DatasetDict:
     """It separates the data into training, testing
-        and validation.
+    and validation.
 
-        Args:
-            data: Dataset to split.
-            test_size: Test data size.
-            val_size: Validation data size.
+    Args:
+        data: Dataset to split.
+        test_size: Test data size.
+        val_size: Validation data size.
 
-        Returns:
-            Dataset with train, test e validation set.
-        """
+    Returns:
+        Dataset with train, test e validation set.
+    """
 
     train_data = data.train_test_split(
         test_size=test_size + val_size,
@@ -116,15 +116,15 @@ def dataset_to_tf_dataset(
         batch_size: int = 8):
     """Converting to TF dataset format.
 
-        Args:
-            data: Dataset.
-            data_collator: Data collator object.
-            columns: Column names.
-            batch_size: Batch size.
+    Args:
+        data: Dataset.
+        data_collator: Data collator object.
+        columns: Column names.
+        batch_size: Batch size.
 
-        Returns:
-            Dataset in the format that TF expects.
-        """
+    Returns:
+        Dataset in the format that TF expects.
+    """
     tf_dataset = {}
     splits = ['train', 'test', 'validation']
     for split in splits:
@@ -144,15 +144,15 @@ def build_model(
         from_pt=None):
     """Generates the model in TF format.
 
-        Args:
-            model_checkpoint: Model name to download from hugging face hub.
-            id2label: Mapper of id to label.
-            label2id: Mapper of label to id.
-            from_pt: Indicates whether or not sensors are in pytorch format.
+    Args:
+        model_checkpoint: Model name to download from hugging face hub.
+        id2label: Mapper of id to label.
+        label2id: Mapper of label to id.
+        from_pt: Indicates whether or not sensors are in pytorch format.
 
-        Returns:
-            Desired model.
-        """
+    Returns:
+        Desired model.
+    """
     return TFAutoModelForTokenClassification.from_pretrained(
         model_checkpoint,
         id2label=id2label,
@@ -167,14 +167,14 @@ def evaluate_model(
         label_names: list) -> dict:
     """Calculates model evaluation metrics.
 
-        Args:
-            model: Model object.
-            test_data: Dataset to test the model.
-            label_names: Label names.
+    Args:
+        model: Model object.
+        test_data: Dataset to test the model.
+        label_names: Label names.
 
-        Returs:
-            Precision, recall and F1.
-        """
+    Returs:
+        Precision, recall and F1.
+    """
 
     # making predictions and computing metrics
     all_labels = []
@@ -198,33 +198,33 @@ def evaluate_model(
 def aspect_counter(data: pd.DataFrame) -> pd.DataFrame:
     """Contabiliza o número de aspectos por registro.
 
-        Args:
-            data: Dataframe com os dados contendo, para cada registro, uma
-            coluna 'aspect_tags' com os valores em formato de lista.
+    Args:
+        data: Dataframe com os dados contendo, para cada registro, uma
+        coluna 'aspect_tags' com os valores em formato de lista.
 
-        Returns
-            Dataframe com uma nova coluna, com o número de aspectos por registro.
-        """
-    num_aspect = []
+    Returns
+        Dataframe com uma nova coluna, com o número de aspectos por registro.
+    """
+    total_aspect = []
     for record in data.aspect_tags.values:
-        num_aspect.append(record.count(1))
-    data['num_aspects'] = num_aspect
+        total_aspect.append(record.count(1))
+    data['total_aspects'] = total_aspect
     return data
 
 
 def has_aspect(data: pd.DataFrame) -> pd.DataFrame:
     """Define se um registro possui ou não aspecto.
 
-        Args:
-            data: Dataframe com os dados contendo, para cada registro, uma
-            coluna 'num_aspects' com a quantidade de aspectos que cada registro
-            possui.
+    Args:
+        data: Dataframe com os dados contendo, para cada registro, uma
+        coluna 'num_aspects' com a quantidade de aspectos que cada registro
+        possui.
 
-        Returns:
-            Dataframe com uma nova coluna, indicando se o registro possui ou
-            não aspectos.
-        """
-    data['has_aspect'] = data.num_aspects > 0
+    Returns:
+        Dataframe com uma nova coluna, indicando se o registro possui ou
+        não aspectos.
+    """
+    data['has_aspect'] = data.total_aspects > 0
     data['has_aspect'] = data['has_aspect'].astype(int)
     return data
 
@@ -232,33 +232,73 @@ def has_aspect(data: pd.DataFrame) -> pd.DataFrame:
 def stratified_k_fold(data: pd.DataFrame,
                       X_cols: list,
                       y_col: str,
+                      groups: str,
                       k: int = 10) -> pd.DataFrame:
     """Gera particões do dataframe com base em amostragem estratificada.
 
-        Args:
-            data: Dataframe com os dados a serem particionados.
-            X_cols: Lista com os nomes das colunas preditoras.
-            y_col: Nome da coluna referência para estraficacão.
-            k: Número de particões.
+    Args:
+        data: Dataframe com os dados a serem particionados.
+        X_cols: Lista com os nomes das colunas preditoras.
+        y_col: Nome da coluna referência para estraficacão.
+        groups: Rótulos de grupo para as amostras usadas ao dividir o conjunto
+                de dados em conjunto de treinamento/teste.
+        k: Número de particões.
 
-        Returns:
-            Dataframe com uma nova coluna 'fold' indicando a particão que o
-            registro está alocado.
-        """
+    Returns:
+        Dataframe com uma nova coluna 'fold' indicando a particão que o
+        registro está alocado.
+    """
 
     # seprando X e y
     y = data[y_col].values
     X = data[X_cols].values
+    groups = data[groups].values
 
     # gerando os folds
     new_data = pd.DataFrame()
-    skf = StratifiedKFold(n_splits=k)
-    for fold, (_, idx) in enumerate((skf.split(X, y))):
+    skf = StratifiedGroupKFold(n_splits=k, shuffle=True)
+    for fold, (_, idx) in enumerate((skf.split(X, y, groups))):
         curr = data.iloc[idx].copy()
         curr['fold'] = fold + 1
         new_data = pd.concat([new_data, curr]).reset_index(drop=True)
     new_data.fold = new_data.fold.astype(int)
     return new_data
+
+
+def summary(data: pd.DataFrame,
+            groupby: str,
+            agg_colname: str,
+            agg: str) -> pd.DataFrame:
+    """Generates aggregation-based summary.
+
+    Args:
+        data:
+        groupby:
+        agg_colname:
+        agg:
+
+    Returns:
+
+    """
+    stats = data.groupby([groupby]).agg({agg_colname: agg}).reset_index()
+    stats[agg_colname] = stats[agg_colname]/stats[agg_colname].sum()
+    return stats.sort_values(agg_colname, ascending=False)
+
+
+def fold_summary(data: pd.DataFrame) -> pd.DataFrame:
+    """
+
+    Args:
+        data:
+
+    Returns:
+
+    """
+    for col in data.iloc[:, 1:].columns:
+        data[col] = data[col] * 100
+    data['fold_avg'] = data.iloc[:, 2:].mean(axis=1)
+    data['fold_std'] = data.iloc[:, 2:].std(axis=1)
+    return round(data, 2)
 
 
 # def tokenize_and_align_labels(examples: dict) -> Dataset:
