@@ -8,7 +8,7 @@ __pycache__/
 
 # others
 notebooks/data/*
-notebooks/conlleval.py
+notebooks/src/conlleval.py
 notebooks/ner_with_transformers.ipynb
 
 # Distribution / packaging
