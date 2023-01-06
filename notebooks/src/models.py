@@ -87,7 +87,7 @@ class AEModel(keras.Model):
 
 class CustomNonPaddingTokenLoss(keras.losses.Loss):
 
-    def __init__(self, name="custom_ner_loss"):
+    def __init__(self, name="custom_ae_loss"):
         super().__init__(name=name)
 
     def call(self, y_true, y_pred):
