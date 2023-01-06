@@ -281,7 +281,6 @@ def summary(data: pd.DataFrame,
 
     """
     stats = data.groupby([groupby]).agg({agg_colname: agg}).reset_index()
-    stats[agg_colname] = stats[agg_colname]/stats[agg_colname].sum()
     return stats.sort_values(agg_colname, ascending=False)
 
 
@@ -294,11 +293,10 @@ def fold_summary(data: pd.DataFrame) -> pd.DataFrame:
     Returns:
 
     """
-    for col in data.iloc[:, 1:].columns:
-        data[col] = data[col] * 100
-    data['fold_avg'] = data.iloc[:, 2:].mean(axis=1)
-    data['fold_std'] = data.iloc[:, 2:].std(axis=1)
-    return round(data, 2)
+    data.loc[len(data)] = ['total'] + list(data.iloc[:, 1:].sum().values)
+    data['fold_avg'] = round(data.iloc[:, 2:].mean(axis=1), 1)
+    data['fold_std'] = round(data.iloc[:, 2:].std(axis=1), 1)
+    return data
 
 
 # def tokenize_and_align_labels(examples: dict) -> Dataset:

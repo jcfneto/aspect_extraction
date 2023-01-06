@@ -6,6 +6,11 @@ __pycache__/
 # C extensions
 *.so
 
+# others
+notebooks/data/*
+notebooks/conlleval.py
+notebooks/ner_with_transformers.ipynb
+
 # Distribution / packaging
 .idea
 .Python
