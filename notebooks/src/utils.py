@@ -2,15 +2,16 @@ import evaluate
 
 import numpy as np
 import pandas as pd
+import tensorflow as tf
 
 from datasets import Dataset, DatasetDict
-
-from sklearn.model_selection import StratifiedGroupKFold
 
 from transformers import (AutoTokenizer,
                           DataCollatorForTokenClassification,
                           TFAutoModelForTokenClassification,
                           TFBertForTokenClassification)
+
+from sklearn.model_selection import StratifiedGroupKFold
 
 
 def json_to_dataframe(path: str) -> pd.DataFrame:
@@ -299,24 +300,59 @@ def fold_summary(data: pd.DataFrame) -> pd.DataFrame:
     return data
 
 
-# def tokenize_and_align_labels(examples: dict) -> Dataset:
-#     """Tokenize and align labels with subword tokens.
-#
-# 	Args:
-# 		examples: Pre-token.
-#
-# 	Returns:
-# 		Tokens with labels.
-# 	"""
-#     tokenized_inputs = tokenizer(
-#         examples['tokens'],
-#         truncation=True,
-#         is_split_into_words=True,
-#     )
-#     all_labels = examples['aspect_tags']
-#     new_labels = []
-#     for i, labels in enumerate(all_labels):
-#         word_ids = tokenized_inputs.word_ids(i)
-#         new_labels.append(align_labels_with_tokens(labels, word_ids))
-#     tokenized_inputs['labels'] = new_labels
-#     return tokenized_inputs
+def save_data_to_file(export_file_path: str, data: DatasetDict) -> None:
+    """Save the data into txt with IOB format.
+
+    Args:
+        export_file_path:
+        data:
+    """
+    with open(export_file_path, 'w') as f:
+        for record in data:
+            aspect_tags = record['aspect_tags']
+            tokens = record['tokens']
+            if len(tokens) > 0:
+                f.write(
+                    str(len(tokens))
+                    + '\t'
+                    + '\t'.join(tokens)
+                    + '\t'
+                    + '\t'.join(map(str, aspect_tags))
+                    + '\n'
+                )
+
+
+def make_tag_lookup_table() -> dict:
+    """Build dict with mapping tags and idxs.
+
+    Returns:
+
+    """
+    iob_labels = ['B', 'I']
+    ner_labels = ['ASP']
+    all_labels = [
+        (label1, label2)
+        for label2 in ner_labels
+        for label1 in iob_labels
+    ]
+    all_labels = ['-'.join([a, b]) for a, b in all_labels]
+    all_labels = ['[PAD]', 'O'] + all_labels
+    return dict(zip(range(0, len(all_labels) + 1), all_labels))
+
+
+def map_record_to_training_data(record) -> tuple:
+    """
+
+    Args:
+        record:
+
+    Returns:
+
+    """
+    record = tf.strings.split(record, sep='\t')
+    length = tf.strings.to_number(record[0], out_type=tf.int32)
+    tokens = record[1:length+1]
+    tags = record[length+1:]
+    tags = tf.strings.to_number(tags, out_type=tf.int32)
+    tags += 1
+    return tokens, tags
