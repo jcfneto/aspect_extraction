@@ -9,6 +9,14 @@ __pycache__/
 # others
 notebooks/data/*
 notebooks/ner_with_transformers.ipynb
+notebooks/model.h5
+notebooks/keras_bert_using_tfhub.ipynb
+notebooks/ae_bert_ffn.ipynb
+notebooks/src/tokenization.py
+notebooks/train.csv
+notebooks/test.csv
+notebooks/stratifying_reli.ipynb
+notebooks/stratifying_tv.ipynb
 
 # Distribution / packaging
 .idea
