@@ -17,6 +17,9 @@ notebooks/train.csv
 notebooks/test.csv
 notebooks/stratifying_reli.ipynb
 notebooks/stratifying_tv.ipynb
+notebooks/sample.py
+notebooks/ner_bi_lstm.ipynb
+pretrained_models/*
 
 # Distribution / packaging
 .idea
